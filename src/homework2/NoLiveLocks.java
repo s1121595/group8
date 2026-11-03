@@ -1,4 +1,5 @@
-package group8;
+package homework2;
+
 
 import java.sql.Connection;
 import java.sql.DriverManager;

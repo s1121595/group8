@@ -1,3 +1,4 @@
+package homework2;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -7,6 +8,16 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Blocking {
+	private static Connection openConnection() throws SQLException {
+		String url = System.getProperty("db.url", System.getenv().getOrDefault(
+				"DB_URL", "jdbc:postgresql://localhost:5432/postgres"));
+		String user = System.getProperty("db.user", System.getenv("DB_USER"));
+		String password = System.getProperty("db.password", System.getenv("DB_PASSWORD"));
+		return user == null || password == null
+				? DriverManager.getConnection(url)
+				: DriverManager.getConnection(url, user, password);
+	}
+
 	public static int num_taks=30;
 	public static int num_queries_per_task = 3;
 	
@@ -34,7 +45,7 @@ public class Blocking {
 	
 	void cerateDB(){	
 		try {
-			Connection con = ConnectionFactory.getDefaultParameterConnection(ConnectionFactory.POSTGRESQL);
+			Connection con = openConnection();
 			executeSQL("DROP TABLE IF EXISTS blocking_data;",con);
 			executeSQL("CREATE TABLE blocking_data ( data_id integer primary key, data_value float, modified_by integer);",con);
 			
@@ -118,7 +129,7 @@ public class Blocking {
 			PreparedStatement ps;
 
 			try {
-				con = ConnectionFactory.getDefaultParameterConnection(ConnectionFactory.POSTGRESQL);//XXX This is the class you need to create, but does not have to be in the Repo
+				con = openConnection();//Each blocking task needs a separate connection.
 				con.setAutoCommit(false);
 				con.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
 				int q = 0;
