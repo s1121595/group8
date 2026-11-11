@@ -75,6 +75,7 @@ public class ContinuousBenchmark {
         double end_time = System.currentTimeMillis();
         double elapsed_sec = (end_time - start_time) / 1000.0;
         System.out.println("\n--- BENCHMARK RESULTS ---");
+        System.out.println("Total Number of Threads: " + num_threads );
         System.out.println("Total Committed Transactions: " + bench.total_committed_transactions.get());
         System.out.println("Elapsed Time: " + elapsed_sec + " seconds");
         System.out.println("Throughput: " + (bench.total_committed_transactions.get() / elapsed_sec) + " transactions/sec");
