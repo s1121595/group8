@@ -3,6 +3,7 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class ContinuousBenchmark {
@@ -13,6 +14,7 @@ public class ContinuousBenchmark {
     int num_tuple = 50000;
     double max_value = 50.0f;
     AtomicLong total_committed_transactions;
+    AtomicInteger nextTupleId;
 
     AtomicLong total_rollbacks;
     AtomicLong deadlock_count;
@@ -23,6 +25,7 @@ public class ContinuousBenchmark {
 
     public ContinuousBenchmark(){
         total_committed_transactions = new AtomicLong(0);
+        nextTupleId = new AtomicInteger(num_tuple);
         total_rollbacks = new AtomicLong(0);
         deadlock_count = new AtomicLong(0);
         duplicate_key_count = new AtomicLong(0);
@@ -98,7 +101,6 @@ public class ContinuousBenchmark {
 
     public class WorkerThread implements Runnable {
         final int workerId;
-        int dynamicTupleIdCounter = num_tuple;
 
         private Connection con;
         private PreparedStatement selectPs;
@@ -134,7 +136,8 @@ public class ContinuousBenchmark {
                 if (p < 0.6) {
                     double sum = 0;
                     for (int q = 0; q < 3; q++) {
-                        int randomId = rand.nextInt(dynamicTupleIdCounter);
+                        //int randomId = rand.nextInt(dynamicTupleIdCounter);
+                        int randomId = rand.nextInt(nextTupleId.get());
                         selectPs.setInt(1, randomId);
                         ResultSet rs = selectPs.executeQuery();
                         if (rs.next()) {
@@ -143,7 +146,8 @@ public class ContinuousBenchmark {
                         rs.close();
                     }
                 } else if (p >= 0.6 && p < 0.7) {
-                    insertPs.setInt(1, dynamicTupleIdCounter++);
+                    //insertPs.setInt(1, dynamicTupleIdCounter++);
+                    insertPs.setInt(1, nextTupleId.getAndIncrement());
                     insertPs.setDouble(2, rand.nextDouble() * max_value);
                     insertPs.setInt(3, workerId);
                     insertPs.executeUpdate();
@@ -157,7 +161,8 @@ public class ContinuousBenchmark {
                     for (int q = 0; q < 3; q++) {
                         updatePs.setDouble(1, rand.nextDouble() * max_value);
                         updatePs.setInt(2, workerId);
-                        updatePs.setInt(3, rand.nextInt(dynamicTupleIdCounter));
+                      //updatePs.setInt(3, rand.nextInt(dynamicTupleIdCounter));
+                        updatePs.setInt(3, rand.nextInt(nextTupleId.get()));
                         updatePs.executeUpdate();
                     }
                 }
